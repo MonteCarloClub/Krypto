@@ -267,7 +267,7 @@ func gg1(x uint32, y uint32, z uint32) uint32 {
 	return (x & y) | ((^x) & z)
 }
 
-func Sum(data []byte) [DigestLength]byte {
+func Sum(data []byte) [DigestLength] byte {
 	var d sm3Digest
 	d.Reset()
 	d.Write(data)

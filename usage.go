@@ -10,7 +10,7 @@ import (
 	"github.com/MonteCarloClub/Krypto/sm3"
 )
 
-func main() {
+func test() {
 	// 椭圆曲线参数
 	curve := sm2.GetSm2P256V1()
 	fmt.Printf("P:%s\n", curve.Params().P.Text(16))
