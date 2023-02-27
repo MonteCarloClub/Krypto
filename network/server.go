@@ -1,6 +1,7 @@
 package network
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 
 	"github.com/MonteCarloClub/Krypto/sm2"
@@ -21,6 +22,7 @@ func NewServer(addr string) *Server {
 // Start starts the server
 func (s *Server) Start() {
 	r := gin.Default()
+	r.POST("/keygen", s.generateKey)
 	r.POST("/encrypt", s.encrypt)
 	r.POST("/decrypt", s.decrypt)
 	r.POST("/sign", s.sign)
@@ -35,7 +37,7 @@ func (s *Server) generateKey(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"priv": hex.EncodeToString(priv.D.Bytes()), "pub": hex.EncodeToString(pub.X.Bytes())})
+	c.JSON(200, gin.H{"priv": priv.GetRawBytes(), "pub": pub.GetRawBytes()})
 }
 
 func (s *Server) encrypt(c *gin.Context) {
@@ -45,12 +47,17 @@ func (s *Server) encrypt(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	cipherText, err := sm2.Encrypt(msg.pub, []byte(msg.PlainText), sm2.C1C3C2)
+	pubKey, err := sm2.RawBytesToPublicKey([]byte(msg.Pub))
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"cipher_text": hex.EncodeToString(cipherText)})
+	cipherText, err := sm2.Encrypt(pubKey, []byte(msg.PlainText), sm2.C1C3C2)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"cipher_text": cipherText})
 }
 
 func (s *Server) decrypt(c *gin.Context) {
@@ -60,12 +67,17 @@ func (s *Server) decrypt(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	plainText, err := sm2.Decrypt(msg.priv, []byte(msg.CipherText), sm2.C1C3C2)
+	privKey, err := sm2.RawBytesToPrivateKey([]byte(msg.Priv))
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"plain_text": hex.EncodeToString(plainText)})
+	plainText, err := sm2.Decrypt(privKey, []byte(msg.CipherText), sm2.C1C3C2)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"plain_text": plainText})
 }
 
 func (s *Server) sign(c *gin.Context) {
@@ -75,12 +87,17 @@ func (s *Server) sign(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	signResult, err := sm2.Sign(msg.priv, nil, []byte(msg.PlainText))
+	privKey, err := sm2.RawBytesToPrivateKey([]byte(msg.Priv))
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"sign_result": hex.EncodeToString(signResult)})
+	signResult, err := sm2.Sign(privKey, nil, []byte(msg.PlainText))
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"sign_result": signResult})
 }
 
 func (s *Server) verify(c *gin.Context) {
@@ -90,7 +107,12 @@ func (s *Server) verify(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	verifyResult := sm2.Verify(msg.pub, nil, []byte(msg.PlainText), []byte(msg.SignResult))
+	pubKey, err := sm2.RawBytesToPublicKey([]byte(msg.Pub))
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	verifyResult := sm2.Verify(pubKey, nil, []byte(msg.PlainText), []byte(msg.SignResult))
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
