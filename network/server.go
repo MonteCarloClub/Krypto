@@ -29,6 +29,15 @@ func (s *Server) Start() {
 	r.Run(s.addr)
 }
 
+func (s *Server) generateKey(c *gin.Context) {
+	priv, pub, err := sm2.GenerateKey(rand.Reader)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"priv": hex.EncodeToString(priv.D.Bytes()), "pub": hex.EncodeToString(pub.X.Bytes())})
+}
+
 func (s *Server) encrypt(c *gin.Context) {
 	var msg EncryptMsg
 	err := c.BindJSON(&msg)
