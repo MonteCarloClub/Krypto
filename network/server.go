@@ -2,7 +2,7 @@ package network
 
 import (
 	"crypto/rand"
-	"encoding/hex"
+	"fmt"
 
 	"github.com/MonteCarloClub/Krypto/sm2"
 	"github.com/MonteCarloClub/Krypto/sm3"
@@ -35,9 +35,8 @@ func (s *Server) generateKey(c *gin.Context) {
 	priv, pub, err := sm2.GenerateKey(rand.Reader)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
-		return
 	}
-	c.JSON(200, gin.H{"priv": priv.GetRawBytes(), "pub": pub.GetRawBytes()})
+	c.JSON(200, gin.H{"priv": string(priv.GetRawBytes()), "pub": string(pub.GetRawBytes())})
 }
 
 func (s *Server) encrypt(c *gin.Context) {
@@ -108,6 +107,7 @@ func (s *Server) verify(c *gin.Context) {
 		return
 	}
 	pubKey, err := sm2.RawBytesToPublicKey([]byte(msg.Pub))
+	fmt.Println(msg.Pub)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return

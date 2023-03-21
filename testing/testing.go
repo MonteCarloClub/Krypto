@@ -1,16 +1,17 @@
-package main
+package testing
 
 import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"testing"
 
 	"github.com/MonteCarloClub/Krypto/sm2"
 	"github.com/MonteCarloClub/Krypto/sm3"
 )
 
-func test() {
+func test(T *testing.T) {
 	// 椭圆曲线参数
 	curve := sm2.GetSm2P256V1()
 	fmt.Printf("P:%s\n", curve.Params().P.Text(16))
