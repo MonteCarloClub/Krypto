@@ -36,7 +36,7 @@ func (s *Server) generateKey(c *gin.Context) {
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 	}
-	c.JSON(200, gin.H{"priv": string(priv.GetRawBytes()), "pub": string(pub.GetRawBytes())})
+	c.JSON(200, gin.H{"priv": priv.GetRawBytes(), "pub": pub.GetRawBytes()})
 }
 
 func (s *Server) encrypt(c *gin.Context) {
